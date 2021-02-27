@@ -20,6 +20,7 @@ interface IBudgetBallot {
 
     function vote(
         uint256 _budgetId,
+        Tickets _tickets,
         bool _yay,
         uint256 _amount
     ) external;

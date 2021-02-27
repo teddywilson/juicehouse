@@ -35,16 +35,17 @@ contract BudgetBallot is IBudgetBallot {
     /** 
       @notice Vote for yay or nay on a budget reconfiguration proposal.
       @param _budgetId The ID for a Budget with a proposed reconfiguration.
+      @param _tickets The tickets being voted with.
       @param _yay True if voting for the proposal, false if voting against.
       @param _amount The amount of staked tickets to allocate to this vote.
     */
     function vote(
         uint256 _budgetId,
+        Tickets _tickets,
         bool _yay,
         uint256 _amount
     ) external override {
         IBudgetStore _budgetStore = juicer.budgetStore();
-        ITicketStore _ticketStore = juicer.ticketStore();
 
         // Get a reference to the Budget being voted on.
         Budget.Data memory _budget = _budgetStore.getBudget(_budgetId);
@@ -55,8 +56,8 @@ contract BudgetBallot is IBudgetBallot {
         // The vote must be cast before the standy period expires.
         require(now < _standbyExpiry, "BudgetBallot::vote: EXPIRED");
 
-        // Get the Tickets used for the Budget.
-        Tickets _tickets = _ticketStore.tickets(_budget.project);
+        // // Get the Tickets used for the Budget.
+        // Tickets _tickets = _ticketStore.tickets(_budget.project);
 
         // Find how many tickets the message sender has staked.
         uint256 _stakedAmount = staker.staked(_tickets, msg.sender);

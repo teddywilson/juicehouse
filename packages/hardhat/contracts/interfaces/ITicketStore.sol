@@ -10,7 +10,7 @@ import "./../Tickets.sol";
 interface ITicketStore is IStore {
     event Issue(address issuer, string name, string symbol);
 
-    function tickets(address _issuer) external view returns (Tickets);
+    function currentTickets(address _issuer) external view returns (Tickets);
 
     function claimable(address _issuer) external view returns (uint256);
 
@@ -27,8 +27,19 @@ interface ITicketStore is IStore {
         address _holder,
         uint256 _amount,
         address _issuer,
+        Tickets _tickets,
         uint256 _proportion
     ) external view returns (uint256);
+
+    function allTicketsTotalSupply(address _issuer)
+        external
+        view
+        returns (uint256 amount);
+
+    function allTicketsBalanceOf(address _issuer, address _holder)
+        external
+        view
+        returns (uint256 amount);
 
     function getTicketValue(address _issuer) external view returns (uint256);
 
@@ -44,6 +55,7 @@ interface ITicketStore is IStore {
 
     function redeem(
         address _issuer,
+        Tickets _tickets,
         address _holder,
         uint256 _amount,
         uint256 _minReturn,

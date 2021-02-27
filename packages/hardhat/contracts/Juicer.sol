@@ -337,6 +337,8 @@ contract Juicer is IJuicer {
     /**
         @notice Addresses can redeem their Tickets to claim overflowed tokens.
         @param _issuer The issuer of the Tickets being redeemed.
+        @param _tickets The Tickets being redeemed. Leave empty to check for I-ower-you redemption.
+        @param _tickets The Tickets being redeemed.
         @param _amount The amount of Tickets to redeem.
         @param _minReturn The minimum amount of tokens expected in return.
         @param _beneficiary The address to send the tokens to.
@@ -344,6 +346,7 @@ contract Juicer is IJuicer {
     */
     function redeem(
         address _issuer,
+        Tickets _tickets,
         uint256 _amount,
         uint256 _minReturn,
         address _beneficiary
@@ -355,6 +358,7 @@ contract Juicer is IJuicer {
         uint256 _claimable =
             ticketStore.redeem(
                 _issuer,
+                _tickets,
                 msg.sender,
                 _amount,
                 _minReturn,
@@ -387,6 +391,7 @@ contract Juicer is IJuicer {
         emit Redeem(
             msg.sender,
             _issuer,
+            _tickets,
             _beneficiary,
             _amount,
             returnAmount,
@@ -471,20 +476,25 @@ contract Juicer is IJuicer {
         @dev Make sure you know what you're doing. This is a one way migration
         @param _to The Juicer contract that will gain minting and burning privileges over the Tickets.
     */
-    function migrate(IJuicer _to) external override lock {
+    function migrate(IJuicer _to, Tickets _tickets) external override lock {
         require(
             migrationContractIsAllowed[address(_to)],
             "Juicer:migrateTickets: BAD_DESTINATION"
+        );
+
+        require(
+            msg.sender == _tickets.issuer(),
+            "Juicer::migrateTickets: UNAUTHORIZED"
         );
 
         // Make sure all reserved tickets and funds have been distributed for this issuer.
         distributeReserves(msg.sender);
 
         // Get a reference to the project's Tickets.
-        Tickets _tickets = ticketStore.tickets(msg.sender);
+        // Tickets _tickets = ticketStore.tickets(msg.sender);
 
         // The project must have issued Tickets.
-        require(_tickets != Tickets(0), "Juicer::migrateTickets: NOT_FOUND");
+        // require(_tickets != Tickets(0), "Juicer::migrateTickets: NOT_FOUND");
 
         // Give the new project admin privileges.
         _tickets.transferOwnership(address(_to));

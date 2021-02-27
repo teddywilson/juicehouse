@@ -19,7 +19,10 @@ contract TicketStore is Store, ITicketStore {
     // --- public properties --- //
 
     /// @notice The Tickets handed out by each issuer. Each issuer has their own Tickets contract.
-    mapping(address => Tickets) public override tickets;
+    mapping(address => Tickets) public override currentTickets;
+
+    /// @notice All Tickets handed out by each issuer.
+    mapping(address => Tickets[]) public allTickets;
 
     /// @notice The current cumulative amount of tokens redeemable by each issuer's Tickets.
     mapping(address => uint256) public override claimable;
@@ -48,8 +51,7 @@ contract TicketStore is Store, ITicketStore {
         override
         returns (uint256)
     {
-        Tickets _tickets = tickets[_issuer];
-        return claimable[_issuer].div(_tickets.totalSupply());
+        return claimable[_issuer].div(allTicketsTotalSupply(_issuer));
     }
 
     // --- public views --- //
@@ -60,6 +62,7 @@ contract TicketStore is Store, ITicketStore {
         @param _amount The amount of Tickets being redeemed.
         Must be within the holder's balance.
         @param _issuer The issuer of the Tickets to get an amount for.
+        @param _tickets The tickets to get the claimable amount for. If an empty address, the cumulative ticket amount will be returned.
         @param _proportion The proportion of the hodler's tickets to make claimable. Out of 1000.
         This creates an opportunity for incenvizing HODLing.
         If the specified `_holder` is the last holder, the proportion will fall back to 1000.
@@ -69,24 +72,27 @@ contract TicketStore is Store, ITicketStore {
         address _holder,
         uint256 _amount,
         address _issuer,
+        Tickets _tickets,
         uint256 _proportion
     ) public view override returns (uint256) {
-        // If there isnt any iOweYou for the specified holder, get issued tickets for the issuer.
-        Tickets _tickets =
-            iOweYous[_issuer][_holder] == 0 ? tickets[_issuer] : Tickets(0);
-
         // Get the total supply either from the ticket or from the iOweYou.
         uint256 _totalSupply =
-            _tickets != Tickets(0)
-                ? _tickets.totalSupply()
+            iOweYous[_issuer][_holder] == 0 &&
+                currentTickets[_issuer] != Tickets(0)
+                ? _tickets != Tickets(0)
+                    ? _tickets.totalSupply()
+                    : allTicketsTotalSupply(_issuer)
                 : totalIOweYous[_issuer];
 
         if (_totalSupply == 0) return 0;
 
         // Get the amount of tickets the specified holder has access to, or is owed.
         uint256 _currentBalance =
-            _tickets != Tickets(0)
-                ? _tickets.balanceOf(_holder)
+            iOweYous[_issuer][_holder] == 0 &&
+                currentTickets[_issuer] != Tickets(0)
+                ? _tickets != Tickets(0)
+                    ? _tickets.balanceOf(_holder)
+                    : allTicketsBalanceOf(_issuer, _holder)
                 : iOweYous[_issuer][_holder];
 
         // Make sure the specified amount is available.
@@ -103,6 +109,41 @@ contract TicketStore is Store, ITicketStore {
                 .div(1000);
     }
 
+    /**
+      @notice The total supply of all of this issuer's tickets.
+      @param _issuer The issuer of the tickets to get a value for.
+      @return amount The total amount.
+     */
+    function allTicketsTotalSupply(address _issuer)
+        public
+        view
+        override
+        returns (uint256 amount)
+    {
+        Tickets[] memory _allTickets = allTickets[_issuer];
+        amount = 0;
+        for (uint256 i = 0; i <= _allTickets.length; i++)
+            amount.add(_allTickets[i].totalSupply());
+    }
+
+    /**
+      @notice The total balance of all of this issuer's tickets for the specified holder.
+      @param _issuer The issuer of the tickets to get a value for.
+      @param _holder The holder of the tickets to get a value for.
+      @return amount The total amount.
+     */
+    function allTicketsBalanceOf(address _issuer, address _holder)
+        public
+        view
+        override
+        returns (uint256 amount)
+    {
+        Tickets[] memory _allTickets = allTickets[_issuer];
+        amount = 0;
+        for (uint256 i = 0; i <= _allTickets.length; i++)
+            amount.add(_allTickets[i].balanceOf(_holder));
+    }
+
     // --- external transactions --- //
 
     constructor() public {}
@@ -114,21 +155,21 @@ contract TicketStore is Store, ITicketStore {
         @param _symbol The ERC-20's symbol. "j" will be prepended.
     */
     function issue(bytes memory _name, bytes memory _symbol) external override {
-        // An owner only needs to issue their Tickets once before they can be used.
-        require(
-            tickets[msg.sender] == Tickets(0),
-            "TicketStore::issue: ALREADY_ISSUED"
-        );
-
         // Create the contract in this Juicer contract in order to have mint and burn privileges.
         // Prepend the strings with standards.
         Tickets _tickets =
             new Tickets(
                 string(abi.encodePacked(_name, bytes(" Juice tickets"))),
-                string(abi.encodePacked(bytes("j"), _symbol))
+                string(abi.encodePacked(bytes("j"), _symbol)),
+                msg.sender
             );
 
-        tickets[msg.sender] = _tickets;
+        // If an owner has already issued tickets, add the old tickets to the list of all tickets.
+        if (currentTickets[msg.sender] != Tickets(0)) {
+            allTickets[msg.sender].push(currentTickets[msg.sender]);
+        }
+
+        currentTickets[msg.sender] = _tickets;
 
         emit Issue(msg.sender, _tickets.name(), _tickets.symbol());
     }
@@ -138,7 +179,7 @@ contract TicketStore is Store, ITicketStore {
       @param _issuer The issuer of the tickets.
      */
     function convert(address _issuer) external override {
-        Tickets _tickets = tickets[_issuer];
+        Tickets _tickets = currentTickets[_issuer];
         require(_tickets != Tickets(0), "TicketStore::convert: NOT_CLAIMABLE");
 
         // The amount of I-owe-yous.
@@ -165,7 +206,7 @@ contract TicketStore is Store, ITicketStore {
         address _holder,
         uint256 _amount
     ) external override onlyAdmin {
-        Tickets _tickets = tickets[_issuer];
+        Tickets _tickets = currentTickets[_issuer];
         uint256 _iOweYou = iOweYous[_issuer][_holder];
         // Mint tickets if there are no I-owe-yous and if tickets have been issued.
         if (_iOweYou == 0 && _tickets != Tickets(0)) {
@@ -181,6 +222,7 @@ contract TicketStore is Store, ITicketStore {
     /** 
       @notice Redeems tickets.
       @param _issuer The issuer of the tickets being redeemed.
+      @param _tickets The tickets being redeemed. Leave empty to check for I-ower-you redemption.
       @param _holder The address redeeming tickets.
       @param _amount The amount of tickets being redeemed.
       @param _minClaimed The minimun amount of claimed tokens to receive in return.
@@ -188,16 +230,23 @@ contract TicketStore is Store, ITicketStore {
     */
     function redeem(
         address _issuer,
+        Tickets _tickets,
         address _holder,
         uint256 _amount,
         uint256 _minClaimed,
         uint256 _proportion
     ) external override onlyAdmin returns (uint256 returnAmount) {
+        require(
+            _tickets == Tickets(0) || _tickets.issuer() == _issuer,
+            "TicketStore::redeem: MISMATCH"
+        );
+
         // The amount of overflowed tokens claimable by the message sender from the specified issuer by redeeming the specified amount.
         returnAmount = getClaimableAmount(
             _holder,
             _amount,
             _issuer,
+            _tickets,
             _proportion
         );
 
@@ -207,11 +256,10 @@ contract TicketStore is Store, ITicketStore {
             "TicketStore::redeem: INSUFFICIENT_FUNDS"
         );
 
-        Tickets _tickets = tickets[_issuer];
         uint256 _iOweYou = iOweYous[_issuer][_holder];
 
-        if (_iOweYou == 0 && _tickets != Tickets(0)) {
-            tickets[_issuer].burn(_holder, _amount);
+        if (_iOweYou == 0 || _tickets != Tickets(0)) {
+            _tickets.burn(_holder, _amount);
         } else {
             iOweYous[_issuer][_holder] = _iOweYou.sub(_amount);
             totalIOweYous[_issuer] = totalIOweYous[_issuer].sub(_amount);

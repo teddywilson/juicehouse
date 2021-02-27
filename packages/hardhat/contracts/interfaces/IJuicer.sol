@@ -43,6 +43,7 @@ interface ITicketsController {
     event Redeem(
         address indexed holder,
         address indexed issuer,
+        IERC20 indexed tickets,
         address beneficiary,
         uint256 amount,
         uint256 returnAmount,
@@ -51,6 +52,7 @@ interface ITicketsController {
 
     function redeem(
         address _issuer,
+        Tickets _tickets,
         uint256 _amount,
         uint256 _minReturn,
         address _beneficiary
@@ -129,7 +131,7 @@ interface IJuicer is IBudgetController, ITicketsController {
 
     function setOverflowYielder(IOverflowYielder _newOverflowYielder) external;
 
-    function migrate(IJuicer _to) external;
+    function migrate(IJuicer _to, Tickets _tickets) external;
 
     function addOverflow(
         address _issuer,

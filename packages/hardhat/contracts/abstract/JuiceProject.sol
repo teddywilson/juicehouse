@@ -111,17 +111,25 @@ abstract contract JuiceProject is Ownable {
       @notice Redeem tickets that have been transfered to this contract and use the claimed amount to fund this project.
       @param _juicer The Juicer to redeem from.
       @param _issuer The issuer who's tickets are being redeemed.
+      @param _tickets The tickets that are being redeemed. Leave empty for I-Owe-You redemption
       @param _amount The amount of tickets being redeemed.
       @param _minReturn The minimum amount of tokens expected in return.
     */
     function redeemTicketsAndFund(
         IJuicer _juicer,
         address _issuer,
+        Tickets _tickets,
         uint256 _amount,
         uint256 _minReturn
     ) external onlyPm {
         uint256 _returnAmount =
-            _juicer.redeem(_issuer, _amount, _minReturn, address(this));
+            _juicer.redeem(
+                _issuer,
+                _tickets,
+                _amount,
+                _minReturn,
+                address(this)
+            );
 
         // Surplus goes back to the issuer.
         _juicer.pay(address(this), _returnAmount, _issuer);
@@ -155,10 +163,15 @@ abstract contract JuiceProject is Ownable {
       @dev The destination must be in the current Juicer's allow list.
       @param _from The contract that currently manages your Tickets and it's funds.
       @param _to The new contract that will manage your Tickets and it's funds.
+      @param _tickets The tickets being migrated.
     */
-    function migrate(IJuicer _from, IJuicer _to) public onlyOwner {
+    function migrate(
+        IJuicer _from,
+        IJuicer _to,
+        Tickets _tickets
+    ) public onlyOwner {
         require(_to != IJuicer(0), "JuiceProject::setJuicer: ZERO_ADDRESS");
-        _from.migrate(_to);
+        _from.migrate(_to, _tickets);
     }
 
     /** 

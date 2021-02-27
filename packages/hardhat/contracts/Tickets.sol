@@ -10,10 +10,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
   @dev The issuer of the Tickets is the only address that can mint and burn.
 */
 contract Tickets is ERC20, Ownable {
-    constructor(string memory _name, string memory _symbol)
-        public
-        ERC20(_name, _symbol)
-    {}
+    address public issuer;
+
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        address _issuer
+    ) public ERC20(_name, _symbol) {
+        issuer = _issuer;
+    }
 
     function mint(address _account, uint256 _amount) external onlyOwner {
         return _mint(_account, _amount);
