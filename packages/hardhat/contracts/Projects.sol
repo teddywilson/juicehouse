@@ -10,7 +10,7 @@ contract Projects is ERC721, IProjects, Administered {
     // --- private properties --- //
 
     // A running count of project IDs.
-    uint256 private projectId = 0;
+    uint256 private projectCount = 0;
 
     // The identifiers for a project.
     mapping(uint256 => Identifier) private identifiers;
@@ -53,11 +53,11 @@ contract Projects is ERC721, IProjects, Administered {
         string memory _link
     ) external override onlyAdmin returns (uint256 id) {
         require(bytes(_handle).length > 0, "Projects::create: EMPTY_HANDLE");
-        projectId++;
-        _safeMint(_owner, projectId);
-        identifiers[projectId] = Identifier(_name, _handle, _logoUri, _link);
-        handleResolver[bytes(_handle)] = projectId;
-        return projectId;
+        projectCount++;
+        _safeMint(_owner, projectCount);
+        identifiers[projectCount] = Identifier(_name, _handle, _logoUri, _link);
+        handleResolver[bytes(_handle)] = projectCount;
+        return projectCount;
     }
 
     /**
