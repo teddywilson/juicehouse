@@ -9,13 +9,13 @@ import "./interfaces/IProjects.sol";
 contract Projects is ERC721, IProjects, Administered {
     // --- private properties --- //
 
-    // A running count of project IDs.
-    uint256 private projectCount = 0;
-
     // The identifiers for a project.
     mapping(uint256 => Identifier) private identifiers;
 
     // --- public properties --- //
+
+    /// @notice a running count of project ids.
+    uint256 public override projectCount = 0;
 
     /// @notice The project that each unique handle represents.
     mapping(bytes => uint256) public override handleResolver;
