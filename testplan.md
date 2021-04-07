@@ -19,3 +19,4 @@
   ) == `<address>`
 - Projects.totalSupply(){after} == Projects.totalSupply(){before} + 1
 - Projects.tokenOfOwnerByIndex(`<address>`, Projects.balanceOf(`<address>`){before}) == Projects.projectCount(){after}
+- `Deploy` event emitted.
