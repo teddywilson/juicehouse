@@ -6,7 +6,7 @@ const deployer = require("./deployer");
 const main = async () => {
   const wethAddr = weth(process.env.HARDHAT_NETWORK);
   const ethUsdAddr = ethUsdPriceFeed(process.env.HARDHAT_NETWORK);
-  deployer(wethAddr, ethUsdAddr);
+  await deployer(wethAddr, ethUsdAddr);
 };
 
 main()
