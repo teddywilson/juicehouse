@@ -12,6 +12,8 @@ interface IProjects is IERC721 {
         string link;
     }
 
+    function projectCount() external returns (uint256 projectId);
+
     function handleResolver(bytes memory _handle)
         external
         returns (uint256 projectId);
