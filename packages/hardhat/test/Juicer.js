@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 const { use, expect } = require("chai");
 const {
   solidity,
-  loadFixture
+  loadFixture,
   // createFixtureLoader,
 } = require("ethereum-waffle");
 const deployer = require("../scripts/deployer");
@@ -30,7 +30,7 @@ async function fixture([owner, addr1] /* , provider */) {
   return {
     contracts: await deployer(),
     owner,
-    addr1
+    addr1,
   };
 }
 
@@ -56,7 +56,7 @@ async function fixture([owner, addr1] /* , provider */) {
 //   // juicer,
 // });
 
-describe("Juicer", () => {
+describe.skip("Juicer", () => {
   // describe.skip("Contract Deployment", function () {
   //   it("Should set the right owner", async function () {
   //     expect(await contracts.juicer.ownerOf()).to.equal(owner.address);
