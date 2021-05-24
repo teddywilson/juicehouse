@@ -5,10 +5,11 @@ import { useCurrencyConverter } from 'hooks/CurrencyConverter'
 import { ContractName } from 'models/contract-name'
 import { FundingCycle } from 'models/funding-cycle'
 import { ProjectIdentifier } from 'models/project-identifier'
-import { CSSProperties, useContext, useMemo } from 'react'
+import { CSSProperties, useMemo } from 'react'
 import { bigNumbersDiff } from 'utils/bigNumbersDiff'
 
 import FundingCycles from './FundingCycles'
+import Mods from './Mods'
 import Paid from './Paid'
 import Pay from './Pay'
 import PayEvents from './PayEvents'
@@ -126,6 +127,10 @@ export default function Project({
             balanceInCurrency={balanceInCurrency}
             showCurrentDetail={showCurrentDetail}
           />
+
+          <div style={{ marginTop: gutter }}>
+            <Mods projectId={projectId} isOwner={isOwner} />
+          </div>
         </Col>
 
         <Col xs={24} md={12}>

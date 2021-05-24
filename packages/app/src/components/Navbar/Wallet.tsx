@@ -8,7 +8,7 @@ export default function Wallet({ userAddress }: { userAddress: string }) {
   const shortened =
     userAddress?.substring(0, 6) +
     '...' +
-    userAddress?.substr(userAddress.length - 6, 6)
+    userAddress?.substr(userAddress.length - 4, 4)
 
   const height = 30
 
