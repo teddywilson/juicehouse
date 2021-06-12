@@ -51,5 +51,5 @@ jobs:
       - name: Test
         run: yarn test
       - name: Lint
-        uses: teddywilson/ethlint@0.0.0
+        uses: teddywilson/ethlint-action@0.0.0
 
