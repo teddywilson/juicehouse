@@ -46,7 +46,10 @@ jobs:
         run: yarn install --frozen-lockfile --prefer-offline
       # Bring up local chain in a separate process.
       # TODO: There may be a better way to do this (e.g., run everything with Docker Compose).
-      - name: Chain
+      - name: Start local chain
         run: yarn chain &>/dev/null &
       - name: Test
         run: yarn test
+      - name: Lint
+        uses: teddywilson/ethlint@0.0.0
+
