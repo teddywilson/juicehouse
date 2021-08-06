@@ -6,7 +6,7 @@ import "./interfaces/ITerminalDirectory.sol";
 
 /** 
   @notice
-  A contract that can receive funds directly and forward to a project's current terminal.
+  A contract that can receive funds directly and forward them to a project's current terminal.
 */
 contract DirectPaymentAddress is IDirectPaymentAddress {
     // --- public immutable stored properties --- //

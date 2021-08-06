@@ -5,6 +5,7 @@ const modStore = require("./mod_store");
 const ticketBooth = require("./ticket_booth");
 const fundingCycles = require("./funding_cycles");
 const directPaymentAddress = require("./direct_payment_address");
+const directPaymentAddressProxy = require("./direct_payment_address_proxy");
 const terminalDirectory = require("./terminal_directory");
 const governance = require("./governance");
 const JuiceboxProject = require("./juice_project");
@@ -18,8 +19,9 @@ module.exports = {
   ticketBooth,
   fundingCycles,
   directPaymentAddress,
+  directPaymentAddressProxy,
   terminalDirectory,
   governance,
   JuiceboxProject,
-  terminalV1
+  terminalV1,
 };
